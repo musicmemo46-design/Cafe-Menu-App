@@ -548,7 +548,12 @@ function renderMenuGrid() {
 function openAddModal() {
   document.getElementById('modal-title').textContent = 'Add Menu';
   document.getElementById('edit-id').value = '';
-  ['edit-name','edit-recipe','edit-memo','edit-image','edit-image-url'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('edit-name').value = '';
+  document.getElementById('edit-recipe').value = '';
+  document.getElementById('edit-memo').value = '';
+  document.getElementById('edit-image').value = '';
+  document.getElementById('edit-image-url').value = '';
+  document.getElementById('edit-image-file').value = '';
   document.getElementById('img-preview').innerHTML = `<div class="img-preview-text"><span>📷</span>Click to select a photo</div>`;
   renderCatTagSelector([]);
   openModal('edit-modal');
