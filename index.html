@@ -261,6 +261,29 @@
   .hier-filter-cat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #CBA135; margin-bottom: 6px; }
   .hier-filter-tags { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 8px; }
 
+  /* SCROLL TO TOP */
+  .scroll-top-btn { position: fixed; bottom: 28px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: #1E3932; color: white; border: none; font-size: 20px; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: none; align-items: center; justify-content: center; z-index: 99; transition: all 0.2s; }
+  .scroll-top-btn.visible { display: flex; }
+  .scroll-top-btn:hover { background: #2D6A4F; transform: translateY(-2px); }
+
+  /* SEARCH CLEAR */
+  .search-wrap { position: relative; }
+  .search-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: #E8E0D0; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: none; align-items: center; justify-content: center; color: #888; }
+  .search-clear.visible { display: flex; }
+  .search-clear:hover { background: #CBA135; color: white; }
+
+  /* FC MENU SEARCH */
+  .fc-menu-search { width: 100%; padding: 8px 14px; border: 2px solid #E8E0D0; border-radius: 20px; font-family: 'Lato', sans-serif; font-size: 13px; outline: none; margin-bottom: 10px; background: white; color: #1a1a1a; transition: border-color 0.2s; }
+  .fc-menu-search:focus { border-color: #2D6A4F; }
+
+  /* EDIT INLINE */
+  .edit-inline { display: none; }
+  .edit-inline.open { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+  .edit-inline input { flex: 1; padding: 6px 12px; border: 2px solid #2D6A4F; border-radius: 8px; font-size: 13px; font-family: 'Lato', sans-serif; outline: none; background: white; color: #1a1a1a; }
+  .cat-block-name-wrap { display: flex; align-items: center; gap: 8px; }
+  .edit-icon-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #888; padding: 2px 4px; border-radius: 4px; transition: color 0.2s; }
+  .edit-icon-btn:hover { color: #1E3932; }
+
   @media (max-width: 768px) {
     .fc-setup-row { grid-template-columns: 1fr; }
     .export-layout { grid-template-columns: 1fr; }
@@ -288,7 +311,10 @@
     <div><div class="page-title">Menu List</div><div class="page-subtitle" id="menu-count">0 items</div></div>
     <button class="btn btn-gold" onclick="openAddModal()">＋ Add Menu</button>
   </div>
-  <div class="search-wrap"><input type="text" id="search-input" placeholder="Search menus…" oninput="renderMenuGrid()"></div>
+  <div class="search-wrap">
+    <input type="text" id="search-input" placeholder="Search menus…" oninput="onSearchInput()" style="padding-right:36px;">
+    <button class="search-clear" id="search-clear-btn" onclick="clearSearch()" title="Clear">✕</button>
+  </div>
   <div class="toolbar-row">
     <div class="view-toggle">
       <button class="view-btn active" id="view-card-btn" onclick="setView('card')">⊞ Cards</button>
@@ -353,7 +379,10 @@
         <button class="fc-range-tab" onclick="setFcRange('select',this)">Select Items</button>
       </div>
       <div id="fc-range-tag" style="display:none;" class="hier-filter-wrap"></div>
-      <div id="fc-range-select" style="display:none;" class="fc-menu-select"></div>
+      <div id="fc-range-select" style="display:none;">
+        <input type="text" class="fc-menu-search" id="fc-menu-search" placeholder="Search menus…" oninput="filterFcMenuList()">
+        <div class="fc-menu-select" id="fc-menu-list"></div>
+      </div>
     </div>
     <div style="display:flex;gap:10px;margin-bottom:0;">
       <button class="btn btn-primary" onclick="startFlashcards()" style="flex:1;justify-content:center;">Start Practice →</button>
@@ -560,6 +589,26 @@ function showPage(id, btn) {
   if (id === 'settings') renderSettings();
 }
 
+// SCROLL TO TOP
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scroll-top-btn');
+  if (btn) btn.classList.toggle('visible', window.scrollY > 300);
+});
+
+// SEARCH
+function onSearchInput() {
+  const val = document.getElementById('search-input').value;
+  const clearBtn = document.getElementById('search-clear-btn');
+  if (clearBtn) clearBtn.classList.toggle('visible', val.length > 0);
+  renderMenuGrid();
+}
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  const clearBtn = document.getElementById('search-clear-btn');
+  if (clearBtn) clearBtn.classList.remove('visible');
+  renderMenuGrid();
+}
+
 // VIEW & SORT
 let viewMode = 'card', sortMode = 'default';
 function setView(mode) {
@@ -620,7 +669,7 @@ function renderMenuGrid() {
       const catTags = categories.filter(c=>activeCats.includes(c.id)).flatMap(c=>c.tags);
       if (!mTags.some(t=>catTags.includes(t))) return false;
     }
-    if (activeTags.length > 0 && !activeTags.every(t=>mTags.includes(t))) return false;
+    if (activeTags.length > 0 && !activeTags.some(t=>mTags.includes(t))) return false;
     return true;
   });
 
@@ -799,8 +848,7 @@ function initFlash() {
       </div>
     </div>`).join('');
 
-  document.getElementById('fc-range-select').innerHTML = menus.map(m=>
-    `<div class="fc-menu-option${fcMenuSelected.includes(m.id)?' selected':''}" data-id="${m.id}" onclick="toggleFcMenu(this)">${m.name}</div>`).join('');
+  renderFcMenuList();
 
   document.querySelectorAll('#fc-front-options .fc-field-option, #fc-back-options .fc-field-option').forEach(el => {
     const cb = el.querySelector('input[type="checkbox"]');
@@ -823,7 +871,20 @@ function toggleFcTag(el, tag) {
 }
 function toggleFcMenu(el) {
   el.classList.toggle('selected');
-  fcMenuSelected = Array.from(document.querySelectorAll('#fc-range-select .fc-menu-option.selected')).map(x=>x.dataset.id);
+  fcMenuSelected = Array.from(document.querySelectorAll('#fc-menu-list .fc-menu-option.selected')).map(x=>x.dataset.id);
+}
+function renderFcMenuList(q) {
+  const search = q !== undefined ? q : (document.getElementById('fc-menu-search')?.value||'').toLowerCase();
+  const filtered = menus.filter(m => !search || m.name.toLowerCase().includes(search));
+  const el = document.getElementById('fc-menu-list');
+  if (!el) return;
+  el.innerHTML = filtered.map(m=>
+    `<div class="fc-menu-option${fcMenuSelected.includes(m.id)?' selected':''}" data-id="${m.id}" onclick="toggleFcMenu(this)">${m.name}</div>`
+  ).join('');
+}
+function filterFcMenuList() {
+  const q = document.getElementById('fc-menu-search').value.toLowerCase();
+  renderFcMenuList(q);
 }
 function startFlashcards() {
   if (menus.length===0) { alert('No menus available. Please add menus first.'); return; }
@@ -997,18 +1058,32 @@ function updateStorageMeter() {
   if (text) text.textContent = used.toFixed(1) + ' KB used of ~5000 KB';
   if (pctEl) pctEl.textContent = pct.toFixed(1) + '%';
 }
+
 function renderSettings() {
-  const el=document.getElementById('cat-blocks');
+  const el = document.getElementById('cat-blocks');
   updateStorageMeter();
   if(categories.length===0){el.innerHTML=`<p style="color:#888;font-size:13px;margin-bottom:12px;">No categories yet.</p>`;return;}
   el.innerHTML=categories.map(c=>`
     <div class="cat-block">
       <div class="cat-block-header">
-        <div class="cat-block-name">${c.name}</div>
-        <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">Delete Category</button>
+        <div class="cat-block-name-wrap">
+          <div class="cat-block-name">${c.name}</div>
+          <button class="edit-icon-btn" onclick="startEditCat('${c.id}')" title="Rename">✎</button>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">Delete</button>
+      </div>
+      <div class="edit-inline" id="edit-cat-${c.id}">
+        <input type="text" value="${c.name}" id="edit-cat-input-${c.id}" onkeydown="if(event.key==='Enter')saveCatName('${c.id}');if(event.key==='Escape')cancelEditCat('${c.id}')">
+        <button class="btn btn-primary btn-sm" onclick="saveCatName('${c.id}')">Save</button>
+        <button class="btn btn-outline btn-sm" onclick="cancelEditCat('${c.id}')">Cancel</button>
       </div>
       <div class="tag-pills">
-        ${c.tags.map(t=>`<div class="tag-pill">${t}<button class="pill-del" onclick="deleteTag('${c.id}','${t}')">✕</button></div>`).join('')}
+        ${c.tags.map(t=>`
+          <div class="tag-pill">
+            <span>${t}</span>
+            <button class="edit-icon-btn" onclick="startEditTag('${c.id}','${t}')" title="Rename" style="color:white;opacity:0.8;font-size:12px;">✎</button>
+            <button class="pill-del" onclick="deleteTag('${c.id}','${t}')">✕</button>
+          </div>`).join('')}
         ${c.tags.length===0?`<span style="font-size:12px;color:#888">No tags yet</span>`:''}
       </div>
       <div class="add-row">
@@ -1016,6 +1091,29 @@ function renderSettings() {
         <button class="btn btn-primary btn-sm" onclick="addTag('${c.id}')">＋ Tag</button>
       </div>
     </div>`).join('');
+}
+function startEditCat(id) {
+  document.getElementById(`edit-cat-${id}`).classList.add('open');
+  document.getElementById(`edit-cat-input-${id}`).focus();
+}
+function cancelEditCat(id) { document.getElementById(`edit-cat-${id}`).classList.remove('open'); }
+function saveCatName(id) {
+  const val = document.getElementById(`edit-cat-input-${id}`).value.trim();
+  if (!val) return;
+  const cat = categories.find(c=>c.id===id); if (!cat) return;
+  cat.name = val;
+  save(); cancelEditCat(id); renderSettings(); renderFilterPanel();
+}
+function startEditTag(catId, oldTag) {
+  const newTag = prompt('Rename tag:', oldTag);
+  if (!newTag || !newTag.trim() || newTag.trim() === oldTag) return;
+  if (allTags().includes(newTag.trim())) { alert('Tag already exists.'); return; }
+  const cat = categories.find(c=>c.id===catId); if (!cat) return;
+  const idx = cat.tags.indexOf(oldTag);
+  if (idx === -1) return;
+  cat.tags[idx] = newTag.trim();
+  menus = menus.map(m => ({ ...m, tags: (m.tags||[]).map(t => t===oldTag ? newTag.trim() : t) }));
+  save(); renderSettings(); renderFilterPanel(); renderMenuGrid();
 }
 function addCategory() {
   const val=document.getElementById('new-cat-input').value.trim(); if(!val) return;
@@ -1073,7 +1171,6 @@ let fcSets = JSON.parse(localStorage.getItem('fcSets') || '[]');
 function saveFcSets() { localStorage.setItem('fcSets', JSON.stringify(fcSets)); }
 
 function renderFcSets() {
-  const panel = document.getElementById('fc-sets-panel');
   const list = document.getElementById('fc-sets-list');
   if (fcSets.length === 0) {
     list.innerHTML = `<span style="font-size:13px;color:#888;">No saved sets yet.</span>`;
@@ -1082,8 +1179,17 @@ function renderFcSets() {
   list.innerHTML = fcSets.map((s,i) => `
     <div class="fc-set-chip" onclick="loadFcSet(${i})">
       ${s.name}
+      <button class="fc-set-del" onclick="event.stopPropagation();editFcSet(${i})" title="Edit" style="background:#CBA135;color:#1E3932;">✎</button>
       <button class="fc-set-del" onclick="event.stopPropagation();deleteFcSet(${i})">✕</button>
     </div>`).join('');
+}
+function editFcSet(i) {
+  const s = fcSets[i]; if (!s) return;
+  const newName = prompt('Rename this set:', s.name);
+  if (!newName || !newName.trim()) return;
+  fcSets[i].name = newName.trim();
+  saveFcSets();
+  renderFcSets();
 }
 
 function saveCurrentSet() {
@@ -1176,5 +1282,6 @@ function clearAllData() {
 renderFilterPanel();
 renderMenuGrid();
 </script>
+<button class="scroll-top-btn" id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
 </body>
 </html>
