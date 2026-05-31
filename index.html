@@ -226,6 +226,41 @@
   .filter-cat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #CBA135; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
   .filter-cat-label:hover { color: #d4aa45; }
 
+  /* LIST VIEW */
+  .menu-list { display: flex; flex-direction: column; gap: 10px; }
+  .menu-list-item { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; align-items: flex-start; gap: 16px; cursor: pointer; transition: all 0.2s; }
+  .menu-list-item:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.14); transform: translateX(4px); }
+  .menu-list-thumb { width: 56px; height: 56px; border-radius: 10px; background: #D4EDDA; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; flex-shrink: 0; }
+  .menu-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .menu-list-body { flex: 1; min-width: 0; }
+  .menu-list-name { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; color: #1E3932; margin-bottom: 4px; }
+  .menu-list-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+  .menu-list-recipe { font-size: 12px; color: #888; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .menu-list-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* VIEW TOGGLE & SORT */
+  .toolbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .view-toggle { display: flex; background: white; border-radius: 20px; padding: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .view-btn { padding: 6px 14px; border-radius: 16px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: none; color: #888; }
+  .view-btn.active { background: #1E3932; color: white; }
+  .sort-select { padding: 8px 14px; border: 2px solid #E8E0D0; border-radius: 20px; font-family: 'Lato', sans-serif; font-size: 12px; font-weight: 700; background: white; color: #4a4a4a; outline: none; cursor: pointer; }
+  .sort-select:focus { border-color: #2D6A4F; }
+
+  /* FC SETS */
+  .fc-sets-panel { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 16px; }
+  .fc-sets-title { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #4a4a4a; margin-bottom: 10px; }
+  .fc-sets-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .fc-set-chip { display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 14px; background: #D4EDDA; border-radius: 20px; font-size: 13px; font-weight: 700; color: #1E3932; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+  .fc-set-chip:hover { border-color: #1E3932; }
+  .fc-set-del { background: #1E3932; color: white; border: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+  .fc-set-del:hover { background: #c0392b; }
+
+  /* HIERARCHICAL FILTER in FC/Export */
+  .hier-filter-wrap { display: flex; flex-direction: column; gap: 10px; }
+  .hier-filter-cat { }
+  .hier-filter-cat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #CBA135; margin-bottom: 6px; }
+  .hier-filter-tags { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 8px; }
+
   @media (max-width: 768px) {
     .fc-setup-row { grid-template-columns: 1fr; }
     .export-layout { grid-template-columns: 1fr; }
@@ -254,6 +289,17 @@
     <button class="btn btn-gold" onclick="openAddModal()">＋ Add Menu</button>
   </div>
   <div class="search-wrap"><input type="text" id="search-input" placeholder="Search menus…" oninput="renderMenuGrid()"></div>
+  <div class="toolbar-row">
+    <div class="view-toggle">
+      <button class="view-btn active" id="view-card-btn" onclick="setView('card')">⊞ Cards</button>
+      <button class="view-btn" id="view-list-btn" onclick="setView('list')">☰ List</button>
+    </div>
+    <select class="sort-select" id="sort-select" onchange="renderMenuGrid()">
+      <option value="default">Sort: Default</option>
+      <option value="az">Name A → Z</option>
+      <option value="za">Name Z → A</option>
+    </select>
+  </div>
   <div class="filter-panel" id="filter-panel" style="display:none;">
     <div id="hierarchical-filter"></div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E8E0D0;">
@@ -269,6 +315,11 @@
 <!-- FLASHCARD -->
 <div id="page-flash" class="page">
   <div class="page-header"><div><div class="page-title">Flashcard Practice</div><div class="page-subtitle">Tap a card to flip it</div></div></div>
+  <div class="fc-sets-panel" id="fc-sets-panel">
+    <div class="fc-sets-title">💾 Saved Sets</div>
+    <div class="fc-sets-list" id="fc-sets-list"></div>
+    <div style="font-size:12px;color:#888;">Click a set to load it.</div>
+  </div>
   <div class="fc-setup" id="fc-setup">
     <div class="fc-setup-title">Practice Settings</div>
     <div class="fc-setup-row">
@@ -301,10 +352,13 @@
         <button class="fc-range-tab" onclick="setFcRange('tag',this)">Filter by Tag</button>
         <button class="fc-range-tab" onclick="setFcRange('select',this)">Select Items</button>
       </div>
-      <div id="fc-range-tag" style="display:none;flex-wrap:wrap;gap:8px;"></div>
+      <div id="fc-range-tag" style="display:none;" class="hier-filter-wrap"></div>
       <div id="fc-range-select" style="display:none;" class="fc-menu-select"></div>
     </div>
-    <button class="btn btn-primary" onclick="startFlashcards()" style="width:100%;justify-content:center;">Start Practice →</button>
+    <div style="display:flex;gap:10px;margin-bottom:0;">
+      <button class="btn btn-primary" onclick="startFlashcards()" style="flex:1;justify-content:center;">Start Practice →</button>
+      <button class="btn btn-outline" onclick="saveCurrentSet()" title="Save this set">💾 Save Set</button>
+    </div>
   </div>
   <div class="fc-arena" id="fc-arena">
     <div class="fc-progress">
@@ -370,7 +424,7 @@
           <label class="export-radio"><input type="radio" name="export-scope" value="tag" onchange="updateExportScope()"> Filter by Tag</label>
           <label class="export-radio"><input type="radio" name="export-scope" value="select" onchange="updateExportScope()"> Select Items</label>
         </div>
-        <div id="export-scope-tag" style="display:none;flex-wrap:wrap;gap:8px;"></div>
+        <div id="export-scope-tag" style="display:none;" class="hier-filter-wrap"></div>
         <div id="export-scope-select" style="display:none;" class="export-menu-select"></div>
       </div>
       <div class="export-btn-group">
@@ -506,22 +560,33 @@ function showPage(id, btn) {
   if (id === 'settings') renderSettings();
 }
 
+// VIEW & SORT
+let viewMode = 'card', sortMode = 'default';
+function setView(mode) {
+  viewMode = mode;
+  document.getElementById('view-card-btn').classList.toggle('active', mode==='card');
+  document.getElementById('view-list-btn').classList.toggle('active', mode==='list');
+  renderMenuGrid();
+}
+
 // FILTER
 let activeCats = [], activeTags = [], filterNoTag = false;
 
-function renderFilterPanel() {
-  document.getElementById('filter-panel').style.display = 'block';
-  // Hierarchical: category label + its tags
-  const hf = document.getElementById('hierarchical-filter');
-  hf.innerHTML = categories.map(c => `
-    <div class="filter-cat-group">
-      <div class="filter-cat-label">
-        <div class="cat-chip ${activeCats.includes(c.id)?'active':''}" onclick="toggleCatFilter('${c.id}',this)" style="margin:0;">${c.name}</div>
-      </div>
-      <div class="chip-wrap" style="padding-left:8px;">
-        ${c.tags.map(t=>`<div class="tag-chip ${activeTags.includes(t)?'active':''}" onclick="toggleTagFilter('${t}',this)">${t}</div>`).join('')}
+function buildHierFilterHTML(targetActiveCats, targetActiveTags, catToggleFn, tagToggleFn) {
+  return categories.map(c => `
+    <div class="hier-filter-cat">
+      <div class="hier-filter-cat-label">${c.name}</div>
+      <div class="hier-filter-tags">
+        <div class="cat-chip ${targetActiveCats.includes(c.id)?'active':''}" onclick="${catToggleFn}('${c.id}',this)">${c.name}</div>
+        ${c.tags.map(t=>`<div class="tag-chip ${targetActiveTags.includes(t)?'active':''}" onclick="${tagToggleFn}('${t}',this)">${t}</div>`).join('')}
       </div>
     </div>`).join('');
+}
+
+function renderFilterPanel() {
+  document.getElementById('filter-panel').style.display = 'block';
+  const hf = document.getElementById('hierarchical-filter');
+  hf.innerHTML = buildHierFilterHTML(activeCats, activeTags, 'toggleCatFilter', 'toggleTagFilter');
   const chip = document.getElementById('no-tag-chip');
   if (chip) chip.classList.toggle('active', filterNoTag);
 }
@@ -544,7 +609,9 @@ function toggleTagFilter(tag, el) {
 // MENU GRID
 function renderMenuGrid() {
   const q = document.getElementById('search-input').value.toLowerCase();
-  const grid = document.getElementById('menu-grid');
+  const container = document.getElementById('menu-grid');
+  sortMode = document.getElementById('sort-select')?.value || 'default';
+
   let filtered = menus.filter(m => {
     if (q && !m.name.toLowerCase().includes(q)) return false;
     const mTags = m.tags || [];
@@ -556,27 +623,54 @@ function renderMenuGrid() {
     if (activeTags.length > 0 && !activeTags.every(t=>mTags.includes(t))) return false;
     return true;
   });
+
+  // Sort
+  if (sortMode === 'az') filtered.sort((a,b) => a.name.localeCompare(b.name));
+  else if (sortMode === 'za') filtered.sort((a,b) => b.name.localeCompare(a.name));
+
   document.getElementById('menu-count').textContent = `${menus.length} item${menus.length!==1?'s':''}`;
+
   if (menus.length === 0) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">☕</div><h3>No menus yet</h3><p>Click "Add Menu" to get started</p></div>`;
+    container.className = 'menu-grid';
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">☕</div><h3>No menus yet</h3><p>Click "Add Menu" to get started</p></div>`;
     return;
   }
   if (filtered.length === 0) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔍</div><h3>No results</h3><p>Try adjusting your filters</p></div>`;
+    container.className = 'menu-grid';
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔍</div><h3>No results</h3><p>Try adjusting your filters</p></div>`;
     return;
   }
-  grid.innerHTML = filtered.map(m => `
-    <div class="menu-card" onclick="openDetail('${m.id}')">
-      <div class="menu-card-img">${m.image?`<img src="${m.image}" alt="${m.name}" onerror="this.parentElement.innerHTML='☕'">`:'☕'}</div>
-      <div class="menu-card-body">
-        <div class="menu-card-name">${m.name}</div>
-        <div class="menu-card-tags">${(m.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join('')}${(m.sizes||[]).map(s=>`<span class="size-badge">${s}</span>`).join('')}</div>
-        <div class="menu-card-actions">
+
+  if (viewMode === 'list') {
+    container.className = 'menu-list';
+    container.innerHTML = filtered.map(m => `
+      <div class="menu-list-item" onclick="openDetail('${m.id}')">
+        <div class="menu-list-thumb">${m.image?`<img src="${m.image}" alt="${m.name}" onerror="this.parentElement.innerHTML='☕'">`:'☕'}</div>
+        <div class="menu-list-body">
+          <div class="menu-list-name">${m.name}</div>
+          <div class="menu-list-tags">${(m.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join('')}${(m.sizes||[]).map(s=>`<span class="size-badge">${s}</span>`).join('')}</div>
+          <div class="menu-list-recipe">${m.recipe||'—'}</div>
+        </div>
+        <div class="menu-list-actions">
           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openEditModal('${m.id}')">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMenu('${m.id}')">Delete</button>
         </div>
-      </div>
-    </div>`).join('');
+      </div>`).join('');
+  } else {
+    container.className = 'menu-grid';
+    container.innerHTML = filtered.map(m => `
+      <div class="menu-card" onclick="openDetail('${m.id}')">
+        <div class="menu-card-img">${m.image?`<img src="${m.image}" alt="${m.name}" onerror="this.parentElement.innerHTML='☕'">`:'☕'}</div>
+        <div class="menu-card-body">
+          <div class="menu-card-name">${m.name}</div>
+          <div class="menu-card-tags">${(m.tags||[]).map(t=>`<span class="tag-badge">${t}</span>`).join('')}${(m.sizes||[]).map(s=>`<span class="size-badge">${s}</span>`).join('')}</div>
+          <div class="menu-card-actions">
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openEditModal('${m.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMenu('${m.id}')">Delete</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
 }
 
 // ADD/EDIT
@@ -696,15 +790,25 @@ document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('c
 let fcCards=[], fcIndex=0, fcFlipped=false, fcRange='all', fcTagSelected=[], fcMenuSelected=[];
 
 function initFlash() {
-  document.getElementById('fc-range-tag').innerHTML = allTags().map(t=>
-    `<div class="tag-option${fcTagSelected.includes(t)?' selected':''}" onclick="toggleFcTag(this,'${t}')">${t}</div>`).join('');
+  // Hierarchical tag filter
+  document.getElementById('fc-range-tag').innerHTML = categories.map(c => `
+    <div class="hier-filter-cat">
+      <div class="hier-filter-cat-label">${c.name}</div>
+      <div class="hier-filter-tags">
+        ${c.tags.map(t=>`<div class="tag-option${fcTagSelected.includes(t)?' selected':''}" onclick="toggleFcTag(this,'${t}')">${t}</div>`).join('')}
+      </div>
+    </div>`).join('');
+
   document.getElementById('fc-range-select').innerHTML = menus.map(m=>
     `<div class="fc-menu-option${fcMenuSelected.includes(m.id)?' selected':''}" data-id="${m.id}" onclick="toggleFcMenu(this)">${m.name}</div>`).join('');
+
   document.querySelectorAll('#fc-front-options .fc-field-option, #fc-back-options .fc-field-option').forEach(el => {
     const cb = el.querySelector('input[type="checkbox"]');
     el.classList.toggle('selected', cb.checked);
     el.addEventListener('click', () => setTimeout(() => el.classList.toggle('selected', cb.checked), 0));
   });
+
+  renderFcSets();
 }
 function setFcRange(range, btn) {
   fcRange = range;
@@ -795,8 +899,13 @@ function backToSetup() {
 // EXPORT
 let exportTagSelected=[], exportMenuSelected=[];
 function initExport() {
-  document.getElementById('export-scope-tag').innerHTML = allTags().map(t=>
-    `<div class="tag-option" onclick="toggleExportTag(this,'${t}')">${t}</div>`).join('');
+  document.getElementById('export-scope-tag').innerHTML = categories.map(c => `
+    <div class="hier-filter-cat">
+      <div class="hier-filter-cat-label">${c.name}</div>
+      <div class="hier-filter-tags">
+        ${c.tags.map(t=>`<div class="tag-option${exportTagSelected.includes(t)?' selected':''}" onclick="toggleExportTag(this,'${t}')">${t}</div>`).join('')}
+      </div>
+    </div>`).join('');
   document.getElementById('export-scope-select').innerHTML = menus.map(m=>
     `<label class="export-menu-item"><input type="checkbox" value="${m.id}" onchange="updateExportMenuSel()"> ${m.name}</label>`).join('');
   renderExportPreview();
@@ -958,6 +1067,78 @@ function recompressAll() {
     });
   });
 }
+// FC SETS
+let fcSets = JSON.parse(localStorage.getItem('fcSets') || '[]');
+
+function saveFcSets() { localStorage.setItem('fcSets', JSON.stringify(fcSets)); }
+
+function renderFcSets() {
+  const panel = document.getElementById('fc-sets-panel');
+  const list = document.getElementById('fc-sets-list');
+  if (fcSets.length === 0) {
+    list.innerHTML = `<span style="font-size:13px;color:#888;">No saved sets yet.</span>`;
+    return;
+  }
+  list.innerHTML = fcSets.map((s,i) => `
+    <div class="fc-set-chip" onclick="loadFcSet(${i})">
+      ${s.name}
+      <button class="fc-set-del" onclick="event.stopPropagation();deleteFcSet(${i})">✕</button>
+    </div>`).join('');
+}
+
+function saveCurrentSet() {
+  const name = prompt('Enter a name for this set:');
+  if (!name || !name.trim()) return;
+  const frontFields = Array.from(document.querySelectorAll('#fc-front-options input:checked')).map(i=>i.value);
+  const backFields = Array.from(document.querySelectorAll('#fc-back-options input:checked')).map(i=>i.value);
+  const set = {
+    name: name.trim(),
+    frontFields, backFields,
+    range: fcRange,
+    tagSelected: [...fcTagSelected],
+    menuSelected: [...fcMenuSelected]
+  };
+  fcSets.push(set);
+  saveFcSets();
+  renderFcSets();
+  alert(`Set "${name.trim()}" saved!`);
+}
+
+function loadFcSet(i) {
+  const s = fcSets[i]; if (!s) return;
+
+  // Apply front fields
+  document.querySelectorAll('#fc-front-options input[type="checkbox"]').forEach(cb => {
+    cb.checked = s.frontFields.includes(cb.value);
+    cb.closest('.fc-field-option').classList.toggle('selected', cb.checked);
+  });
+  // Apply back fields
+  document.querySelectorAll('#fc-back-options input[type="checkbox"]').forEach(cb => {
+    cb.checked = s.backFields.includes(cb.value);
+    cb.closest('.fc-field-option').classList.toggle('selected', cb.checked);
+  });
+
+  // Apply range
+  fcTagSelected = s.tagSelected || [];
+  fcMenuSelected = s.menuSelected || [];
+  const rangeMap = { all: 0, tag: 1, select: 2 };
+  const tabs = document.querySelectorAll('.fc-range-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (tabs[rangeMap[s.range]]) tabs[rangeMap[s.range]].classList.add('active');
+  setFcRange(s.range, tabs[rangeMap[s.range]] || tabs[0]);
+
+  // Re-render range selectors with loaded state
+  initFlash();
+  alert(`Set "${s.name}" loaded!`);
+}
+
+function deleteFcSet(i) {
+  if (!confirm(`Delete set "${fcSets[i]?.name}"?`)) return;
+  fcSets.splice(i, 1);
+  saveFcSets();
+  renderFcSets();
+}
+
 function exportData() {
   const a=document.createElement('a');
   a.download=`menu-backup-${Date.now()}.json`;
@@ -982,12 +1163,13 @@ function importData(e) {
 function clearAllData() {
   if(!confirm('Delete ALL data? This cannot be undone.')) return;
   menus=[];
+  fcSets=[];
   categories=[
     {id:'c1',name:'Temperature',tags:['Hot','Iced']},
     {id:'c2',name:'Drink Type',tags:['Latte','Frappuccino','Tea','Espresso']},
     {id:'c3',name:'Other',tags:['Food','Seasonal','Decaf']}
   ];
-  save();renderSettings();renderFilterPanel();renderMenuGrid();
+  save();saveFcSets();renderSettings();renderFilterPanel();renderMenuGrid();
 }
 
 // INIT
