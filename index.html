@@ -105,7 +105,7 @@
   .img-preview-text span { display: block; font-size: 32px; margin-bottom: 8px; }
 
   /* DETAIL */
-  .detail-img { width: 100%; height: 240px; background: #D4EDDA; display: flex; align-items: center; justify-content: center; font-size: 64px; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  .detail-img { width: 100%; aspect-ratio: 1 / 1; background: #D4EDDA; display: flex; align-items: center; justify-content: center; font-size: 64px; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
   .detail-img img { width: 100%; height: 100%; object-fit: cover; }
   .detail-section { margin-bottom: 20px; }
   .detail-section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #CBA135; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #E8E0D0; }
@@ -284,6 +284,15 @@
   .edit-icon-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #888; padding: 2px 4px; border-radius: 4px; transition: color 0.2s; }
   .edit-icon-btn:hover { color: #1E3932; }
 
+  /* FC UNIFIED RANGE */
+  .fc-unified-range { display: flex; flex-direction: column; gap: 12px; }
+  .fc-unified-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+  .fc-unified-menus { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 8px; max-height: 220px; overflow-y: auto; }
+  .fc-unified-search { width: 100%; padding: 8px 14px; border: 2px solid #E8E0D0; border-radius: 20px; font-family: 'Lato',sans-serif; font-size: 13px; outline: none; background: white; color: #1a1a1a; transition: border-color 0.2s; }
+  .fc-unified-search:focus { border-color: #2D6A4F; }
+  .fc-unified-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+  .fc-select-all-row { display: flex; gap: 8px; margin-bottom: 4px; }
+
   @media (max-width: 768px) {
     .fc-setup-row { grid-template-columns: 1fr; }
     .export-layout { grid-template-columns: 1fr; }
@@ -373,15 +382,20 @@
     </div>
     <div class="fc-range-section">
       <h4>Practice Range</h4>
-      <div class="fc-range-tabs">
-        <button class="fc-range-tab active" onclick="setFcRange('all',this)">All</button>
-        <button class="fc-range-tab" onclick="setFcRange('tag',this)">Filter by Tag</button>
-        <button class="fc-range-tab" onclick="setFcRange('select',this)">Select Items</button>
-      </div>
-      <div id="fc-range-tag" style="display:none;" class="hier-filter-wrap"></div>
-      <div id="fc-range-select" style="display:none;">
-        <input type="text" class="fc-menu-search" id="fc-menu-search" placeholder="Search menus…" oninput="filterFcMenuList()">
-        <div class="fc-menu-select" id="fc-menu-list"></div>
+      <div class="fc-unified-range">
+        <div>
+          <div class="fc-unified-label">Filter by Tag (optional)</div>
+          <div class="fc-unified-tags" id="fc-unified-tags"></div>
+        </div>
+        <div>
+          <div class="fc-unified-label">Select Items</div>
+          <input type="text" class="fc-unified-search" id="fc-menu-search" placeholder="Search menus…" oninput="filterFcMenuList()">
+          <div class="fc-select-all-row">
+            <button class="btn btn-outline btn-sm" onclick="fcSelectAll()">Select All</button>
+            <button class="btn btn-outline btn-sm" onclick="fcDeselectAll()">Deselect All</button>
+          </div>
+          <div class="fc-unified-menus" id="fc-menu-list"></div>
+        </div>
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-bottom:0;">
@@ -411,6 +425,10 @@
       <button class="btn btn-outline" onclick="prevCard()">← Prev</button>
       <button class="btn btn-primary" onclick="flipCard()">Flip</button>
       <button class="btn btn-gold" onclick="nextCard()">Next →</button>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+      <button class="btn btn-outline btn-sm" onclick="editCurrentCard()">✎ Edit Menu</button>
+      <button class="btn btn-danger btn-sm" onclick="stopFlashcards()">■ Stop</button>
     </div>
   </div>
   <div class="fc-result" id="fc-result">
@@ -867,7 +885,8 @@ function setFcRange(range, btn) {
 }
 function toggleFcTag(el, tag) {
   el.classList.toggle('selected');
-  fcTagSelected = Array.from(document.querySelectorAll('#fc-range-tag .tag-option.selected')).map(x=>x.textContent);
+  fcTagSelected = Array.from(document.querySelectorAll('#fc-unified-tags .tag-option.selected')).map(x=>x.textContent.trim());
+  renderFcMenuList();
 }
 function toggleFcMenu(el) {
   el.classList.toggle('selected');
@@ -875,16 +894,33 @@ function toggleFcMenu(el) {
 }
 function renderFcMenuList(q) {
   const search = q !== undefined ? q : (document.getElementById('fc-menu-search')?.value||'').toLowerCase();
-  const filtered = menus.filter(m => !search || m.name.toLowerCase().includes(search));
+  let filtered = menus;
+  // tag filter first
+  if (fcTagSelected.length > 0) {
+    filtered = filtered.filter(m => (m.tags||[]).some(t => fcTagSelected.includes(t)));
+  }
+  // then text search
+  if (search) filtered = filtered.filter(m => m.name.toLowerCase().includes(search));
   const el = document.getElementById('fc-menu-list');
   if (!el) return;
-  el.innerHTML = filtered.map(m=>
-    `<div class="fc-menu-option${fcMenuSelected.includes(m.id)?' selected':''}" data-id="${m.id}" onclick="toggleFcMenu(this)">${m.name}</div>`
-  ).join('');
+  el.innerHTML = filtered.length === 0
+    ? `<span style="font-size:13px;color:#888;">No menus found</span>`
+    : filtered.map(m=>
+        `<div class="fc-menu-option${fcMenuSelected.includes(m.id)?' selected':''}" data-id="${m.id}" onclick="toggleFcMenu(this)">${m.name}</div>`
+      ).join('');
 }
 function filterFcMenuList() {
-  const q = document.getElementById('fc-menu-search').value.toLowerCase();
-  renderFcMenuList(q);
+  renderFcMenuList();
+}
+function fcSelectAll() {
+  const visible = Array.from(document.querySelectorAll('#fc-menu-list .fc-menu-option'));
+  visible.forEach(el => { el.classList.add('selected'); if (!fcMenuSelected.includes(el.dataset.id)) fcMenuSelected.push(el.dataset.id); });
+}
+function fcDeselectAll() {
+  const visible = Array.from(document.querySelectorAll('#fc-menu-list .fc-menu-option'));
+  const visibleIds = visible.map(el => el.dataset.id);
+  visible.forEach(el => el.classList.remove('selected'));
+  fcMenuSelected = fcMenuSelected.filter(id => !visibleIds.includes(id));
 }
 function startFlashcards() {
   if (menus.length===0) { alert('No menus available. Please add menus first.'); return; }
@@ -892,9 +928,15 @@ function startFlashcards() {
   const backFields = Array.from(document.querySelectorAll('#fc-back-options input:checked')).map(i=>i.value);
   if (frontFields.length===0) { alert('Please select at least one field for the front.'); return; }
   if (backFields.length===0) { alert('Please select at least one field for the back.'); return; }
-  let pool = [...menus];
-  if (fcRange==='tag' && fcTagSelected.length>0) pool = pool.filter(m=>(m.tags||[]).some(t=>fcTagSelected.includes(t)));
-  else if (fcRange==='select' && fcMenuSelected.length>0) pool = pool.filter(m=>fcMenuSelected.includes(m.id));
+  // Use selected menus if any, otherwise apply tag filter, otherwise all
+  let pool;
+  if (fcMenuSelected.length > 0) {
+    pool = menus.filter(m => fcMenuSelected.includes(m.id));
+  } else if (fcTagSelected.length > 0) {
+    pool = menus.filter(m => (m.tags||[]).some(t => fcTagSelected.includes(t)));
+  } else {
+    pool = [...menus];
+  }
   if (pool.length===0) { alert('No menus in the selected range.'); return; }
   fcCards = pool.sort(()=>Math.random()-0.5);
   fcIndex=0; fcFlipped=false;
@@ -955,6 +997,20 @@ function backToSetup() {
   document.getElementById('fc-result').classList.remove('active');
   document.getElementById('fc-arena').classList.remove('active');
   document.getElementById('fc-setup').style.display='block';
+}
+function stopFlashcards() {
+  if (!confirm('Stop practice and return to settings?')) return;
+  document.getElementById('fc-arena').classList.remove('active');
+  document.getElementById('fc-result').classList.remove('active');
+  document.getElementById('fc-setup').style.display='block';
+}
+function editCurrentCard() {
+  const m = fcCards[fcIndex]; if (!m) return;
+  // Switch to menu page, open edit modal
+  showPage('menu', document.querySelector('.nav-tab'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.nav-tab').classList.add('active');
+  setTimeout(() => openEditModal(m.id), 100);
 }
 
 // EXPORT
@@ -1224,16 +1280,8 @@ function loadFcSet(i) {
     cb.closest('.fc-field-option').classList.toggle('selected', cb.checked);
   });
 
-  // Apply range
   fcTagSelected = s.tagSelected || [];
   fcMenuSelected = s.menuSelected || [];
-  const rangeMap = { all: 0, tag: 1, select: 2 };
-  const tabs = document.querySelectorAll('.fc-range-tab');
-  tabs.forEach(t => t.classList.remove('active'));
-  if (tabs[rangeMap[s.range]]) tabs[rangeMap[s.range]].classList.add('active');
-  setFcRange(s.range, tabs[rangeMap[s.range]] || tabs[0]);
-
-  // Re-render range selectors with loaded state
   initFlash();
   alert(`Set "${s.name}" loaded!`);
 }
