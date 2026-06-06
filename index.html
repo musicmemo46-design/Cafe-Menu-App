@@ -881,26 +881,21 @@ function initFlash() {
   // Render menu list
   renderFcMenuList();
 
-  // Fix checkbox highlight — remove old listeners by cloning
+  // Sync selected highlight with checkbox state
   document.querySelectorAll('#fc-front-options .fc-field-option, #fc-back-options .fc-field-option').forEach(el => {
     const cb = el.querySelector('input[type="checkbox"]');
+    // Set initial highlight
     el.classList.toggle('selected', cb.checked);
-    const newEl = el.cloneNode(true);
-    el.parentNode.replaceChild(newEl, el);
-    const newCb = newEl.querySelector('input[type="checkbox"]');
-    newEl.addEventListener('click', () => {
-      setTimeout(() => newEl.classList.toggle('selected', newCb.checked), 0);
+    // On change (checkbox click triggers change)
+    cb.addEventListener('change', () => {
+      el.classList.toggle('selected', cb.checked);
     });
   });
 
   renderFcSets();
 }
 function setFcRange(range, btn) {
-  fcRange = range;
-  document.querySelectorAll('.fc-range-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('fc-range-tag').style.display = range==='tag'?'flex':'none';
-  document.getElementById('fc-range-select').style.display = range==='select'?'grid':'none';
+  fcRange = range; // kept for set compatibility
 }
 function toggleFcTag(el, tag) {
   el.classList.toggle('selected');
