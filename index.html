@@ -639,21 +639,23 @@ function setView(mode) {
 // FILTER
 let activeCats = [], activeTags = [], filterNoTag = false;
 
-function buildHierFilterHTML(targetActiveCats, targetActiveTags, catToggleFn, tagToggleFn) {
-  return categories.map(c => `
-    <div class="hier-filter-cat">
-      <div class="hier-filter-cat-label">${c.name}</div>
-      <div class="hier-filter-tags">
-        <div class="cat-chip ${targetActiveCats.includes(c.id)?'active':''}" onclick="${catToggleFn}('${c.id}',this)">${c.name}</div>
-        ${c.tags.map(t=>`<div class="tag-chip ${targetActiveTags.includes(t)?'active':''}" onclick="${tagToggleFn}('${t}',this)">${t}</div>`).join('')}
-      </div>
-    </div>`).join('');
-}
-
 function renderFilterPanel() {
   document.getElementById('filter-panel').style.display = 'block';
   const hf = document.getElementById('hierarchical-filter');
-  hf.innerHTML = buildHierFilterHTML(activeCats, activeTags, 'toggleCatFilter', 'toggleTagFilter');
+  hf.innerHTML = categories.map(c => {
+    const catActive = activeCats.includes(c.id) ? 'active' : '';
+    const tagChips = c.tags.map(t => {
+      const tagActive = activeTags.includes(t) ? 'active' : '';
+      return `<div class="tag-chip ${tagActive}" data-tag="${t}" onclick="toggleTagFilter('${t}',this)">${t}</div>`;
+    }).join('');
+    return `<div class="hier-filter-cat">
+      <div class="hier-filter-cat-label">${c.name}</div>
+      <div class="hier-filter-tags">
+        <div class="cat-chip ${catActive}" data-catid="${c.id}" onclick="toggleCatFilter('${c.id}',this)">${c.name}</div>
+        ${tagChips}
+      </div>
+    </div>`;
+  }).join('');
   const chip = document.getElementById('no-tag-chip');
   if (chip) chip.classList.toggle('active', filterNoTag);
 }
@@ -1016,13 +1018,16 @@ function editCurrentCard() {
 // EXPORT
 let exportTagSelected=[], exportMenuSelected=[];
 function initExport() {
-  document.getElementById('export-scope-tag').innerHTML = categories.map(c => `
-    <div class="hier-filter-cat">
+  document.getElementById('export-scope-tag').innerHTML = categories.map(c => {
+    const tagChips = c.tags.map(t => {
+      const sel = exportTagSelected.includes(t) ? ' selected' : '';
+      return `<div class="tag-option${sel}" data-tag="${t}" onclick="toggleExportTag(this,'${t}')">${t}</div>`;
+    }).join('');
+    return `<div class="hier-filter-cat">
       <div class="hier-filter-cat-label">${c.name}</div>
-      <div class="hier-filter-tags">
-        ${c.tags.map(t=>`<div class="tag-option${exportTagSelected.includes(t)?' selected':''}" onclick="toggleExportTag(this,'${t}')">${t}</div>`).join('')}
-      </div>
-    </div>`).join('');
+      <div class="hier-filter-tags">${tagChips}</div>
+    </div>`;
+  }).join('');
   document.getElementById('export-scope-select').innerHTML = menus.map(m=>
     `<label class="export-menu-item"><input type="checkbox" value="${m.id}" onchange="updateExportMenuSel()"> ${m.name}</label>`).join('');
   renderExportPreview();
