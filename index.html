@@ -859,21 +859,38 @@ document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('c
 let fcCards=[], fcIndex=0, fcFlipped=false, fcRange='all', fcTagSelected=[], fcMenuSelected=[];
 
 function initFlash() {
-  // Hierarchical tag filter
-  document.getElementById('fc-range-tag').innerHTML = categories.map(c => `
-    <div class="hier-filter-cat">
-      <div class="hier-filter-cat-label">${c.name}</div>
-      <div class="hier-filter-tags">
-        ${c.tags.map(t=>`<div class="tag-option${fcTagSelected.includes(t)?' selected':''}" onclick="toggleFcTag(this,'${t}')">${t}</div>`).join('')}
-      </div>
-    </div>`).join('');
+  // Render tag chips for unified filter
+  const tagEl = document.getElementById('fc-unified-tags');
+  if (tagEl) {
+    if (allTags().length === 0) {
+      tagEl.innerHTML = '<span style="font-size:13px;color:#888;">No tags available</span>';
+    } else {
+      tagEl.innerHTML = categories.map(c => {
+        const chips = c.tags.map(t => {
+          const sel = fcTagSelected.includes(t) ? ' selected' : '';
+          return `<div class="tag-option${sel}" data-tag="${t}" onclick="toggleFcTag(this,'${t}')">${t}</div>`;
+        }).join('');
+        return `<div style="margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#CBA135;margin-bottom:4px;">${c.name}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div>
+        </div>`;
+      }).join('');
+    }
+  }
 
+  // Render menu list
   renderFcMenuList();
 
+  // Fix checkbox highlight — remove old listeners by cloning
   document.querySelectorAll('#fc-front-options .fc-field-option, #fc-back-options .fc-field-option').forEach(el => {
     const cb = el.querySelector('input[type="checkbox"]');
     el.classList.toggle('selected', cb.checked);
-    el.addEventListener('click', () => setTimeout(() => el.classList.toggle('selected', cb.checked), 0));
+    const newEl = el.cloneNode(true);
+    el.parentNode.replaceChild(newEl, el);
+    const newCb = newEl.querySelector('input[type="checkbox"]');
+    newEl.addEventListener('click', () => {
+      setTimeout(() => newEl.classList.toggle('selected', newCb.checked), 0);
+    });
   });
 
   renderFcSets();
